@@ -3,6 +3,7 @@ package com.example.demo.config;
 import com.example.demo.jwt.JWTFilter;
 import com.example.demo.jwt.JWTUtil;
 import com.example.demo.jwt.LoginFilter;
+import com.example.demo.jwt.repository.RefreshTokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,10 +26,12 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final JWTUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil) {
+    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, JWTUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.jwtUtil = jwtUtil;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Bean
@@ -44,7 +47,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil);
+        LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil, refreshTokenRepository);
         loginFilter.setFilterProcessesUrl("/api/login/process");
 
         http

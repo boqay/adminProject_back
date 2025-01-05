@@ -1,5 +1,7 @@
 package com.example.demo.jwt;
 
+import com.example.demo.jwt.entity.RefreshToken;
+import com.example.demo.jwt.repository.RefreshTokenRepository;
 import com.example.demo.member.dto.CustomUserDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -15,15 +17,18 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.UUID;
 
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private final AuthenticationManager authenticationManager;
     private final JWTUtil jwtUtil;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil) {
+    public LoginFilter(AuthenticationManager authenticationManager, JWTUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Override
@@ -32,8 +37,7 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String memberId = obtainUsername(request);
         String passWord = obtainPassword(request);
         System.out.println(memberId + " " + passWord);
-        System.out.println("##############################");
-        System.out.println(request);
+
         //스프링 시큐리티에서 ID와 passwd를 검증하기 위해 토큰에 담아야함
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(memberId, passWord, null);
 
@@ -46,17 +50,21 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
 
-        String userId = customUserDetails.getUsername();
+        String memberId = customUserDetails.getUsername();
 
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();
 
         String role = auth.getAuthority();
+        //refreshToken redis에 저장
+        String refreshToken = UUID.randomUUID().toString();
+        RefreshToken redis = new RefreshToken(refreshToken, memberId);
+        refreshTokenRepository.save(redis);
+        response.addHeader("Authorization-refresh", "Bearer " + redis.getRefreshToken());
 
-        String token = jwtUtil.createJwt(userId, role, 60*60*10L);
-
-        response.addHeader("Authorization", "Bearer " + token);
+        String accessToken = jwtUtil.createJwt(memberId, role, 60*60*10L);
+        response.addHeader("Authorization", "Bearer " + accessToken);
     }
 
     @Override
