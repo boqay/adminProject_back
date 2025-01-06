@@ -1,18 +1,15 @@
 package com.example.demo.jwt.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
 @Getter
-@RedisHash(value = "refreshToken", timeToLive = 14440)
+@RedisHash(value = "refreshToken", timeToLive = 60)
+@AllArgsConstructor
 public class RefreshToken {
     @Id
-    private String refreshToken;
     private String memberId;
-
-    public RefreshToken(String refreshToken, String memberId) {
-        this.refreshToken = refreshToken;
-        this.memberId = memberId;
-    }
+    private String refreshToken;
 }

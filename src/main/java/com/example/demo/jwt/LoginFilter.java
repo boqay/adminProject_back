@@ -58,11 +58,12 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
         String role = auth.getAuthority();
         //refreshToken redis에 저장
-        String refreshToken = UUID.randomUUID().toString();
-        RefreshToken redis = new RefreshToken(refreshToken, memberId);
-        refreshTokenRepository.save(redis);
-        response.addHeader("Authorization-refresh", "Bearer " + redis.getRefreshToken());
-
+        String refreshToken = jwtUtil.createJwt(UUID.randomUUID().toString(), role, 60*60*10L);
+        refreshTokenRepository.findById(memberId).ifPresent(refreshTokenRepository::delete);
+        refreshTokenRepository.save(new RefreshToken(refreshToken, memberId));
+        response.addHeader("Authorization-refresh", "Bearer " + refreshToken);
+        
+        //accessToken 전송
         String accessToken = jwtUtil.createJwt(memberId, role, 60*60*10L);
         response.addHeader("Authorization", "Bearer " + accessToken);
     }
