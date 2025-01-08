@@ -23,8 +23,10 @@ public class JWTFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        System.out.println(request.getHeaderNames());
         //request에서 Authorization 헤더를 찾음
         String authorization = request.getHeader("Authorization");
+        System.out.println("토큰을 확인해보자!!"+authorization);
         if (authorization == null || !authorization.startsWith("Bearer ")) {
 
             System.out.println("token null");

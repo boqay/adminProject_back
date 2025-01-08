@@ -3,6 +3,7 @@ package com.example.demo.jwt;
 import com.example.demo.jwt.entity.RefreshToken;
 import com.example.demo.jwt.repository.RefreshTokenRepository;
 import com.example.demo.member.dto.CustomUserDetails;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -61,11 +62,19 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         String refreshToken = jwtUtil.createJwt(UUID.randomUUID().toString(), role, 60*60*10L);
         refreshTokenRepository.findById(memberId).ifPresent(refreshTokenRepository::delete);
         refreshTokenRepository.save(new RefreshToken(refreshToken, memberId));
-        response.addHeader("Authorization-refresh", "Bearer " + refreshToken);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        // 객체를 JSON으로 변환
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonResponse = objectMapper.writeValueAsString(new RefreshToken(memberId, refreshToken));
+
+        // JSON 데이터 응답 본문에 쓰기
+        response.getWriter().write(jsonResponse);
         
         //accessToken 전송
         String accessToken = jwtUtil.createJwt(memberId, role, 60*60*10L);
         response.addHeader("Authorization", "Bearer " + accessToken);
+        response.getWriter().flush(); //
     }
 
     @Override
