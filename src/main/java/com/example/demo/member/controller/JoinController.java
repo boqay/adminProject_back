@@ -22,7 +22,7 @@ public class JoinController {
     private final JoinService joinService;
 
     @PostMapping("/process")
-    @Operation(summary = "Example API Summary", description = "Your description")
+    @Operation(summary = "회원가입 처리")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Success",
                     content = {@Content(schema = @Schema(implementation = JoinRequestDto.class))}),
